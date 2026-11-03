@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>台灣麻將</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f1ea;--fg:#222;--felt:#1d5c3a;--tile:#fbf7e8;--panel:#14432a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15191a;--fg:#eee}}
+:root[data-theme="dark"]{--bg:#15191a;--fg:#eee}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;padding:8px}
+#t{max-width:820px;margin:auto;background:var(--felt);border-radius:14px;padding:8px;color:#fff;display:grid;grid-template-columns:92px 1fr 92px;gap:6px;position:relative;overflow:hidden}
+.pl{background:var(--panel);border-radius:8px;padding:5px;font-size:12px;min-height:56px}
+#p2,#bar,#me{grid-column:1/4}#p3{grid-column:1;grid-row:2}#c{grid-column:2;grid-row:2}#p1{grid-column:3;grid-row:2}
+#c{display:grid;grid-template-columns:1fr 1.3fr 1fr;grid-template-areas:". a ." "b m d" ". e .";gap:4px;font-size:11px;background:#0b2f1c;border-radius:8px;padding:4px;align-items:center}
+#c>div{min-height:30px}#d2{grid-area:a}#d3{grid-area:b}#d1{grid-area:d}#d0{grid-area:e}#mid{grid-area:m;text-align:center;font-size:12px;line-height:1.5}
+.tl{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:26px;height:36px;margin:1px;border-radius:4px;background:var(--tile);color:#222;font-size:14px;line-height:1.1;box-shadow:0 2px 0 #b9b090;vertical-align:middle}
+.tl i{font-style:normal;font-size:11px;color:#b22}.tl b{font-weight:600}
+.s1 b{color:#1a4fa0}.s2 b{color:#1c7a3a}.hr b{color:#b22}.hg b{color:#1c7a3a}
+.tl.xs,#me .tl.xs{width:17px;height:24px;font-size:12px;margin:1px;cursor:default;transform:none}.xs i{font-size:9px}
+.bk{background:#c9a24a;box-shadow:0 2px 0 #8a6d22}.hl{outline:2px solid #f2c14e}
+#me .tl{width:36px;height:50px;font-size:20px;cursor:pointer;margin:2px 1px}#me .tl i{font-size:13px}
+#me .tl:hover{transform:translateY(-6px)}.gap{display:inline-block;width:14px}
+@keyframes pop{from{opacity:0;transform:translateY(-20px) scale(.7)}}
+.dl .tl{animation:pop .3s both}
+@keyframes sh{50%{transform:translate(var(--x),var(--y)) rotate(var(--r))}}
+#shuf{position:absolute;inset:0;background:#000a;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:18px}
+#sb{position:relative;width:240px;height:150px}
+#sb .tl{position:absolute;left:calc(50% - 13px);top:calc(50% - 18px);animation:sh .5s ease-in-out infinite}
+button{font:inherit;padding:8px 14px;margin:4px 4px 0 0;border:0;border-radius:8px;background:#f2c14e;color:#222;cursor:pointer}
+#msg{min-height:1.5em;font-size:15px}
+#res{white-space:pre-line;background:#0008;padding:8px;border-radius:8px;grid-column:1/4}#res:empty{display:none}
+@media(max-width:480px){#t{grid-template-columns:70px 1fr 70px}#me .tl{width:27px;height:40px;font-size:16px}}
+</style></head><body>
+<div id="t">
+<div class="pl" id="p2"></div><div class="pl" id="p3"></div><div id="c"></div><div class="pl" id="p1"></div>
+<div id="bar"><div id="msg"></div><div id="act"></div></div>
+<div class="pl" id="me"></div><div id="res"></div>
+</div>
+<script>
+const NMS=["你","下家","對家","上家"],WD="東南西北",FL="春夏秋冬梅蘭竹菊",BASE=30,UNIT=10;
+let W,H,M,F,D,turn,pend,canW,last,over,opts,aw,dealer=0,streak=0,quan=0,S=[1000,1000,1000,1000],ks=0,dr=0,dealing=0;
+const $=id=>document.getElementById(id);
+const NM2=t=>t<27?"一二三四五六七八九"[t%9]+"萬筒條"[t/9|0]:"東南西北中發白"[t-27];
+function tile(t,cls="",ex=""){
+  if(t<27)return `<span ${ex} class="tl s${t/9|0} ${cls}"><b>${"一二三四五六七八九"[t%9]}</b><i>${"萬筒條"[t/9|0]}</i></span>`;
+  return `<span ${ex} class="tl ${t==31?"hr":t==32?"hg":""} ${cls}"><b>${"東南西北中發白"[t-27]}</b></span>`;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}}
+function draw(p,front){
+  for(;;){const t=front?W.shift():W.pop();
+    if(t>=34){F[p].push(t);continue}
+    H[p].sort((a,b)=>a-b);H[p].push(t);return t}
+}
+function start(){
+  over=false;$("res").textContent="";$("act").innerHTML="";$("msg").textContent="洗牌中…";
+  H=[[],[],[],[]];M=[[],[],[],[]];F=[[],[],[],[]];D=[[],[],[],[]];W=[];last=null;pend=null;turn=-1;
+  render();
+  const s=document.createElement("div");s.id="shuf";let h="";
+  for(let i=0;i<40;i++)h+=`<span class="tl bk" style="--x:${(Math.random()-.5)*220|0}px;--y:${(Math.random()-.5)*130|0}px;--r:${(Math.random()-.5)*200|0}deg;animation-delay:${i*25}ms"></span>`;
+  s.innerHTML=`<div id="sb">${h}</div><div>洗牌中…</div>`;$("t").appendChild(s);
+  setTimeout(()=>{s.remove();deal()},1600);
+}
+function deal(){
+  for(let t=0;t<34;t++)for(let k=0;k<4;k++)W.push(t);
+  for(let t=34;t<42;t++)W.push(t);shuffle(W);
+  for(let r=0;r<16;r++)for(let p=0;p<4;p++)draw(p);
+  H.forEach(h=>h.sort((a,b)=>a-b));
+  dealing=1;setTimeout(()=>dealing=0,1000);turnOf(dealer);
+}
+function solve(c,p,tri){
+  const i=c.findIndex(x=>x>0);if(i<0)return p;
+  let r=false;
+  if(c[i]>=3){c[i]-=3;r=solve(c,p,tri);c[i]+=3;if(r)return true}
+  if(!p&&c[i]>=2){c[i]-=2;r=solve(c,1,tri);c[i]+=2;if(r)return true}
+  if(!tri&&i<27&&i%9<7&&c[i+1]&&c[i+2]){c[i]--;c[i+1]--;c[i+2]--;r=solve(c,p,tri);c[i]++;c[i+1]++;c[i+2]++;if(r)return true}
+  return false;
+}
+const cnt=a=>{const c=Array(34).fill(0);a.forEach(t=>c[t]++);return c};
+const isWin=(a,tri)=>solve(cnt(a),0,tri);
+function ownKongs(p){
+  const c=cnt(H[p]),r=[];
+  for(let t=0;t<34;t++){
+    if(c[t]==4)r.push({t,add:0});
+    else if(c[t]&&M[p].some(m=>m.length==3&&m[0]==m[1]&&m[0]==t))r.push({t,add:1})}
+  return r;
+}
+function turnOf(p,skip){
+  turn=p;canW=false;
+  if(!skip){ks=0;if(W.length<=16)return end();draw(p);dr=1;return after(p)}
+  dr=0;go(p);
+}
+function after(p){
+  canW=false;
+  if(isWin(H[p])){if(p)return win(p,1);canW=true}
+  else if(p){const k=ownKongs(p)[0];if(k&&Math.random()<.6)return setTimeout(()=>doKong(p,k.t,k.add),500)}
+  go(p);
+}
+function go(p){
+  if(p==0){pend="discard";render()}
+  else{pend=null;render();setTimeout(()=>aiDiscard(p),650)}
+}
+function doKong(p,t,add,from){
+  const rm=n=>{while(n--)H[p].splice(H[p].indexOf(t),1)};
+  if(add){rm(1);M[p].find(m=>m.length==3&&m[0]==m[1]&&m[0]==t).push(t)}
+  else if(from!=null){rm(3);D[from].pop();const m=[t,t,t,t];m.o=1;M[p].push(m)}
+  else{rm(4);M[p].push([t,t,t,t])}
+  pend=null;
+  if(W.length<=16)return end();
+  turn=p;draw(p,1);dr=1;ks=1;after(p);
+}
+function aiDiscard(p){
+  const c=cnt(H[p]);let best=0,bs=99;
+  H[p].forEach((t,i)=>{
+    let s=c[t]*3;
+    if(t<27){const k=t%9;
+      if(k>0&&c[t-1])s+=2;if(k<8&&c[t+1])s+=2;
+      if(k>1&&c[t-2])s+=1;if(k<7&&c[t+2])s+=1;
+      if(k==0||k==8)s-=1}
+    else if(c[t]==1)s-=2;
+    s+=Math.random();
+    if(s<bs){bs=s;best=i}
+  });
+  discard(p,best);
+}
+function discard(p,i){
+  const t=H[p].splice(i,1)[0];
+  H[p].sort((a,b)=>a-b);D[p].push(t);last={p,t};pend=null;dr=0;
+  let hW=0;aw=0;
+  for(let k=1;k<4;k++){const q=(p+k)%4;
+    if(isWin([...H[q],t])){if(q==0)hW=1;else if(!aw)aw=q}}
+  const c=cnt(H[0]);opts={win:hW,pong:p!=0&&c[t]>=2,kong:p!=0&&c[t]==3,chows:[]};
+  if(p==3&&t<27){const k=t%9;
+    [[-2,-1],[-1,1],[1,2]].forEach(([a,b])=>{if(k+a>=0&&k+b<=8&&c[t+a]&&c[t+b])opts.chows.push([t+a,t+b])})}
+  if(opts.win||opts.pong||opts.kong||opts.chows.length){pend="react";render();return}
+  render();
+  if(aw)return win(aw,0,t);
+  for(let k=1;k<4;k++){const q=(p+k)%4;if(!q)continue;const n=cnt(H[q])[t];
+    if(n==3&&Math.random()<.5)return doKong(q,t,0,p);
+    if(n>=2&&Math.random()<.35)return meld(q,t,p)}
+  next(p);
+}
+function next(p){setTimeout(()=>turnOf((p+1)%4),350)}
+function meld(q,t,from,pair){
+  const need=pair||[t,t];
+  need.forEach(x=>H[q].splice(H[q].indexOf(x),1));
+  D[from].pop();const m=[...need,t].sort((a,b)=>a-b);m.o=1;M[q].push(m);
+  H[q].sort((a,b)=>a-b);turn=q;dr=0;canW=false;pend=null;go(q);
+}
+function act(a,j){
+  const t=last.t,f=last.p;pend=null;
+  if(a=="win")return win(0,0,t);
+  if(a=="pong")return meld(0,t,f);
+  if(a=="kong")return doKong(0,t,0,f);
+  if(a=="chow")return meld(0,t,f,opts.chows[j]);
+  if(aw)return win(aw,0,t);
+  render();next(f);
+}
+function tai(p,ts){
+  const all=[...H[p],...M[p].flat()],c=cnt(all),L=[],s=(p-dealer+4)%4;
+  if(p==dealer){L.push(["莊家",1]);if(streak)L.push([`連${streak}拉${streak}`,2*streak])}
+  if(ts)L.push(["自摸",1]);
+  if(ts&&ks)L.push(["槓上開花",1]);
+  if(M[p].every(m=>!m.o))L.push(["門清",1]);
+  const f=F[p].filter(x=>(x-34)%4==s).length;if(f)L.push(["花牌",f]);
+  [31,32,33].forEach(t=>{if(c[t]>=3)L.push(["三元牌 "+NM2(t),1])});
+  if(c[27+quan]>=3)L.push(["圈風 "+WD[quan],1]);
+  if(c[27+s]>=3)L.push(["門風 "+WD[s],1]);
+  if(isWin(H[p],1)&&M[p].every(m=>m[0]==m[1]))L.push(["碰碰胡",4]);
+  const su=new Set(all.filter(t=>t<27).map(t=>t/9|0)),h=all.some(t=>t>=27);
+  if(su.size==1)L.push([h?"混一色":"清一色",h?4:8]);
+  return L;
+}
+function win(p,ts,t){
+  if(t!=null){H[p].push(t);D[last.p].pop()}
+  H[p].sort((a,b)=>a-b);
+  const L=tai(p,ts),n=L.reduce((s,x)=>s+x[1],0),amt=BASE+n*UNIT;
+  if(ts){for(let q=0;q<4;q++)if(q!=p){S[q]-=amt;S[p]+=amt}}
+  else{S[last.p]-=amt;S[p]+=amt}
+  const ds=p==dealer;
+  if(ds)streak++;else{dealer=(dealer+1)%4;streak=0;if(dealer==0)quan=(quan+1)%4}
+  over=true;pend=null;render();
+  $("msg").textContent=`${NMS[p]}${ts?"自摸":"胡牌"}！`;
+  $("res").textContent=`🀄 ${NMS[p]}${ts?"自摸":"胡了"}，共 ${n} 台（底 ${BASE} + ${n}×${UNIT} = ${amt}）\n`+L.map(x=>`${x[0]} ${x[1]}台`).join("、")+
+    (ts?`\n三家各付 ${amt}`:`\n放槍：${NMS[last.p]} 付 ${amt}`)+`\n${ds?"莊家連莊":"輪莊："+NMS[dealer]+"當莊"}`;
+  $("act").innerHTML=`<button onclick="start()">下一局</button>`;
+}
+function end(){
+  streak++;over=true;pend=null;render();
+  $("msg").textContent="流局";$("res").textContent="牌牆摸完，流局，莊家連莊。";
+  $("act").innerHTML=`<button onclick="start()">下一局</button>`;
+}
+const fl=p=>F[p].map(t=>FL[t-34]).join("");
+const mt=p=>M[p].map(m=>m.map(t=>tile(t,"xs")).join("")).join(" ");
+function side(p){
+  const w=WD[(p-dealer+4)%4];
+  return `<b>${NMS[p]}</b> ${w}${p==dealer?"莊":""}${turn==p&&!over?" ▶":""}<br>${S[p]}分<br>`+
+    (over?H[p].map(t=>tile(t,"xs")).join(""):`<span class="tl bk xs"></span>×${H[p].length}`)+"<br>"+mt(p)+" "+fl(p);
+}
+const dc=p=>D[p].map((t,i)=>tile(t,"xs"+(last&&last.p==p&&i==D[p].length-1&&!over?" hl":""))).join("");
+function render(){
+  $("p1").innerHTML=side(1);$("p2").innerHTML=side(2);$("p3").innerHTML=side(3);
+  $("c").innerHTML=`<div id="d2">${dc(2)}</div><div id="d3">${dc(3)}</div><div id="mid"><b>${WD[quan]}風圈</b><br>莊：${NMS[dealer]}${streak?" 連"+streak:""}<br>牌牆 ${Math.max(0,W.length-16)}</div><div id="d1">${dc(1)}</div><div id="d0">${dc(0)}</div>`;
+  const h=H[0];$("me").className="pl"+(dealing?" dl":"");
+  $("me").innerHTML=`<b>你</b> ${WD[(0-dealer+4)%4]}${dealer==0?"莊":""}${turn==0&&!over?" ▶":""} ${S[0]}分　${mt(0)} ${fl(0)}<br>`+
+    h.map((t,i)=>(dr&&turn==0&&pend=="discard"&&i==h.length-1?`<span class="gap"></span>`:"")+tile(t,"",`onclick="pick(${i})" style="animation-delay:${dealing?i*35:0}ms"`)).join("");
+  if(over||turn<0)return;
+  let a="",m="對手思考中…";
+  if(pend=="discard"){
+    m=canW?"你可以自摸！或選一張牌打出":"請選一張牌打出";
+    if(canW)a=`<button onclick="win(0,1)">自摸</button>`;
+    if(dr)a+=ownKongs(0).map(k=>`<button onclick="doKong(0,${k.t},${k.add})">${k.add?"加槓":"槓"} ${NM2(k.t)}</button>`).join("");
+  }else if(pend=="react"){
+    m=`${NMS[last.p]}打出「${NM2(last.t)}」`;
+    a=(opts.win?`<button onclick="act('win')">胡</button>`:"")+(opts.kong?`<button onclick="act('kong')">槓</button>`:"")+(opts.pong?`<button onclick="act('pong')">碰</button>`:"")+
+      opts.chows.map((c,j)=>`<button onclick="act('chow',${j})">吃 ${[c[0],last.t,c[1]].sort((x,y)=>x-y).map(NM2).join("")}</button>`).join("")+`<button onclick="act('pass')">過</button>`;
+  }
+  $("msg").textContent=m;$("act").innerHTML=a;
+}
+function pick(i){if(pend=="discard"&&!over)discard(0,i)}
+start();
+</script></body></html>
