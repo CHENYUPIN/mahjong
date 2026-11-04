@@ -23,7 +23,7 @@ body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang T
 @keyframes pop{from{opacity:0;transform:translateY(-20px) scale(.7)}}
 .dl .tl{animation:pop .3s both}
 @keyframes sh{50%{transform:translate(var(--x),var(--y)) rotate(var(--r))}}
-#shuf{position:absolute;inset:0;background:#000a;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:18px}
+#shuf{position:fixed;inset:0;overflow:auto;padding:12px;background:#000a;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:18px}
 #sb{position:relative;width:240px;height:150px}
 #sb .tl{position:absolute;left:calc(50% - 13px);top:calc(50% - 18px);animation:sh .5s ease-in-out infinite}
 #dbox{width:min(92%,340px);padding:18px 14px;border-radius:16px;border:2px solid #d9b45a;background:radial-gradient(circle at 50% 30%,#2a7a4e,#124d2d);box-shadow:0 10px 30px #000a,inset 0 0 30px #0006;text-align:center}
