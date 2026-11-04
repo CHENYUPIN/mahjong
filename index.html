@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>台灣麻將</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f1ea;--fg:#222;--felt:#1d5c3a;--tile:#fbf7e8;--panel:#14432a}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f1ea;--fg:#222;--felt:#1d5c3a;--tile:#f6f7f1;--panel:#14432a}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15191a;--fg:#eee}}
 :root[data-theme="dark"]{--bg:#15191a;--fg:#eee}
 *{box-sizing:border-box}html,body{margin:0}
@@ -13,11 +13,11 @@ body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang T
 #p2,#bar,#me{grid-column:1/4}#p3{grid-column:1;grid-row:2}#c{grid-column:2;grid-row:2}#p1{grid-column:3;grid-row:2}
 #c{display:grid;grid-template-columns:1fr 1.3fr 1fr;grid-template-areas:". a ." "b m d" ". e .";gap:4px;font-size:11px;background:#0b2f1c;border-radius:8px;padding:4px;align-items:center}
 #c>div{min-height:30px}#d2{grid-area:a}#d3{grid-area:b}#d1{grid-area:d}#d0{grid-area:e}#mid{grid-area:m;text-align:center;font-size:12px;line-height:1.5}
-.tl{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:26px;height:36px;margin:1px;border-radius:4px;background:var(--tile);color:#222;font-size:14px;line-height:1.1;box-shadow:0 2px 0 #b9b090;vertical-align:middle}
+.tl{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:26px;height:36px;margin:1px;border-radius:4px;background:var(--tile);color:#222;font-size:14px;line-height:1.1;box-shadow:0 2px 0 #8d9a90;vertical-align:middle}
 .tl i{font-style:normal;font-size:11px;color:#b22}.tl b{font-weight:600}
 .s1 b{color:#1a4fa0}.s2 b{color:#1c7a3a}.hr b{color:#b22}.hg b{color:#1c7a3a}
 .tl.xs,#me .tl.xs{width:17px;height:24px;font-size:12px;margin:1px;cursor:default;transform:none}.xs i{font-size:9px}
-.bk{background:#c9a24a;box-shadow:0 2px 0 #8a6d22}.hl{outline:2px solid #f2c14e}
+.bk{background:linear-gradient(145deg,#1d6b3d,#0f3d22);box-shadow:0 2px 0 #06210f,inset 0 0 0 1.5px #5fae80}.hl{outline:2px solid #f2c14e}
 #me .tl{width:36px;height:50px;font-size:20px;cursor:pointer;margin:2px 1px}#me .tl i{font-size:13px}
 #me .tl:hover{transform:translateY(-6px)}.gap{display:inline-block;width:14px}
 @keyframes pop{from{opacity:0;transform:translateY(-20px) scale(.7)}}
@@ -26,6 +26,16 @@ body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang T
 #shuf{position:fixed;inset:0;overflow:auto;padding:12px;background:#000a;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:18px}
 #sb{position:relative;width:240px;height:150px}
 #sb .tl{position:absolute;left:calc(50% - 13px);top:calc(50% - 18px);animation:sh .5s ease-in-out infinite}
+.wall{display:flex;flex-wrap:wrap;justify-content:center;gap:1px;margin-top:6px}
+@media(max-width:480px){.ws{width:6px;height:9px}}
+.tl svg{width:88%;height:92%;display:block}.tl i.bai{width:62%;height:68%;border:2px solid #1a4fa0;border-radius:3px;background:none}
+.fw b{font-size:13px;line-height:1}.fw i{font-size:8px;color:#667}
+#mid .big{font-size:24px;font-weight:700;color:#f2d98a;letter-spacing:2px}#mid .mid2{font-size:18px;font-weight:700;margin-top:2px}
+.wl{position:absolute;display:flex;gap:1px;justify-content:center}
+.wb{left:18px;right:18px;bottom:3px}.wt{left:18px;right:18px;top:3px}
+.wr,.wf{top:18px;bottom:18px;flex-direction:column;align-items:center}.wr{right:3px}.wf{left:3px}
+.ws{width:10px;height:13px;border-radius:2px;background:linear-gradient(#e8efe9 30%,#14532d 30%);box-shadow:0 1px 0 #06210f,inset 0 0 0 1px #5fae80}.ws.off{visibility:hidden}
+@media(max-width:480px){#mid .big{font-size:16px;letter-spacing:0}#mid .mid2{font-size:12px}}
 #dbox{width:min(92%,340px);padding:18px 14px;border-radius:16px;border:2px solid #d9b45a;background:radial-gradient(circle at 50% 30%,#2a7a4e,#124d2d);box-shadow:0 10px 30px #000a,inset 0 0 30px #0006;text-align:center}
 #dbox h2{margin:0 0 4px;font-size:24px;letter-spacing:6px;color:#f2d98a}
 #dbox p{margin:0;font-size:13px;opacity:.85}
@@ -56,7 +66,21 @@ const NMS=["你","下家","對家","上家"],WD="東南西北",FL="春夏秋冬�
 let W,H,M,F,D,turn,pend,canW,last,over,opts,aw,dealer=0,d0=0,streak=0,quan=0,S=[1000,1000,1000,1000],ks=0,dr=0,dealing=0;
 const $=id=>document.getElementById(id);
 const NM2=t=>t<27?"一二三四五六七八九"[t%9]+"萬筒條"[t/9|0]:"東南西北中發白"[t-27];
+const PL={1:[[15,20]],2:[[15,11],[15,29]],3:[[8,9],[15,20],[22,31]],4:[[8,11],[22,11],[8,29],[22,29]],5:[[8,11],[22,11],[15,20],[8,29],[22,29]],6:[[8,9],[22,9],[8,20],[22,20],[8,31],[22,31]],7:[[8,7],[15,13],[22,19],[8,28],[22,28],[8,36],[22,36]],8:[[8,6],[22,6],[8,16],[22,16],[8,25],[22,25],[8,34],[22,34]],9:[[8,9],[15,9],[22,9],[8,20],[15,20],[22,20],[8,31],[15,31],[22,31]]};
+const BL={2:[[15,11],[15,29]],3:[[15,11],[8,29],[22,29]],4:[[8,11],[22,11],[8,29],[22,29]],5:[[8,11],[22,11],[15,20],[8,29],[22,29]],6:[[8,11],[15,11],[22,11],[8,29],[15,29],[22,29]],7:[[15,8],[8,20],[15,20],[22,20],[8,32],[15,32],[22,32]],8:[[8,8],[22,8],[8,17],[22,17],[8,25],[22,25],[8,34],[22,34]],9:PL[9]};
 function tile(t,cls="",ex=""){
+  const s=t/9|0,n=t%9+1;
+  if(t==33)return `<span ${ex} class="tl ${cls}"><i class="bai"></i></span>`;
+  if(s==0||t>=27)return tileOld(t,cls,ex);
+  let g='';
+  if(s==1)PL[n].forEach(([x,y],i)=>{const r=n==1?9:n>6?3.3:4.2,c=n==1?'#c62828':['#1c7a3a','#c62828','#1a4fa0'][i%3];
+    g+=`<circle cx='${x}' cy='${y}' r='${r}' fill='${c}' stroke='#123' stroke-width='.6'/><circle cx='${x}' cy='${y}' r='${r*.45}' fill='#fff9'/>`});
+  else if(n==1)g=`<text x='15' y='28' font-size='24' text-anchor='middle'>🦚</text>`;
+  else{const h=n<7?12:n==8?7:10;BL[n].forEach(([x,y],i)=>{const c=(n==5&&i==2)||(n==7&&i==0)?'#c62828':'#1c7a3a';
+    g+=`<rect x='${x-2.2}' y='${y-h/2}' width='4.4' height='${h}' rx='2' fill='${c}'/><rect x='${x-2.2}' y='${y-.7}' width='4.4' height='1.4' fill='#fff8'/>`})}
+  return `<span ${ex} class="tl ${cls}"><svg viewBox='0 0 30 40'>${g}</svg></span>`;
+}
+function tileOld(t,cls="",ex=""){
   if(t<27)return `<span ${ex} class="tl s${t/9|0} ${cls}"><b>${"一二三四五六七八九"[t%9]}</b><i>${"萬筒條"[t/9|0]}</i></span>`;
   return `<span ${ex} class="tl ${t==31?"hr":t==32?"hg":""} ${cls}"><b>${"東南西北中發白"[t-27]}</b></span>`;
 }
@@ -204,7 +228,8 @@ function end(){
   $("msg").textContent="流局";$("res").textContent="牌牆摸完，流局，莊家連莊。";
   $("act").innerHTML=`<button onclick="start()">下一局</button>`;
 }
-const fl=p=>F[p].map(t=>FL[t-34]).join("");
+const FE=["🌱","☀️","🍂","❄️","🌸","🌷","🎋","🌼"];
+const fl=p=>F[p].map(t=>`<span class="tl xs fw"><b>${FE[t-34]}</b><i>${FL[t-34]}</i></span>`).join("");
 const mt=p=>M[p].map(m=>m.map(t=>tile(t,"xs")).join("")).join(" ");
 function side(p){
   const w=WD[(p-dealer+4)%4];
@@ -212,9 +237,18 @@ function side(p){
     (over?H[p].map(t=>tile(t,"xs")).join(""):`<span class="tl bk xs"></span>×${H[p].length}`)+"<br>"+mt(p)+" "+fl(p);
 }
 const dc=p=>D[p].map((t,i)=>tile(t,"xs"+(last&&last.p==p&&i==D[p].length-1&&!over?" hl":""))).join("");
+function wall(){
+  const n=W?Math.ceil(Math.max(0,W.length-16)/2):0;let h='';
+  for(let i=0;i<n;i++)h+="<i class='ws'></i>";return h;
+}
+function wallOld(){
+  const n=W?Math.ceil(Math.max(0,W.length-16)/2):0;
+  const sd=k=>{let h='';for(let i=0;i<10;i++)h+=`<i class='ws${k*10+i<n?'':' off'}'></i>`;return h};
+  return `<div class='wl wb'>${sd(0)}</div><div class='wl wr'>${sd(1)}</div><div class='wl wt'>${sd(2)}</div><div class='wl wf'>${sd(3)}</div>`;
+}
 function render(){
   $("p1").innerHTML=side(1);$("p2").innerHTML=side(2);$("p3").innerHTML=side(3);
-  $("c").innerHTML=`<div id="d2">${dc(2)}</div><div id="d3">${dc(3)}</div><div id="mid"><b>${WD[quan]}風圈</b><br>莊：${NMS[dealer]}${streak?" 連"+streak:""}<br>牌牆 ${Math.max(0,W.length-16)}</div><div id="d1">${dc(1)}</div><div id="d0">${dc(0)}</div>`;
+  $("c").innerHTML=`<div id="d2">${dc(2)}</div><div id="d3">${dc(3)}</div><div id="mid"><div class="big">${WD[quan]}風圈</div><div class="mid2">莊：${NMS[dealer]}${streak?" 連"+streak:""}</div><div class="wall">${wall()}</div></div><div id="d1">${dc(1)}</div><div id="d0">${dc(0)}</div>`;
   const h=H[0];$("me").className="pl"+(dealing?" dl":"");
   $("me").innerHTML=`${av(0)}<b>你</b> ${WD[(0-dealer+4)%4]}${dealer==0?"莊":""}${turn==0&&!over?" ▶":""} ${S[0]}分　${mt(0)} ${fl(0)}<br>`+
     h.map((t,i)=>(dr&&turn==0&&pend=="discard"&&i==h.length-1?`<span class="gap"></span>`:"")+tile(t,"",`onclick="pick(${i})" style="animation-delay:${dealing?i*35:0}ms"`)).join("");
