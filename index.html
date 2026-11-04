@@ -26,6 +26,20 @@ body{background:var(--bg);color:var(--fg);font-family:"Noto Sans TC","PingFang T
 #shuf{position:absolute;inset:0;background:#000a;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:18px}
 #sb{position:relative;width:240px;height:150px}
 #sb .tl{position:absolute;left:calc(50% - 13px);top:calc(50% - 18px);animation:sh .5s ease-in-out infinite}
+#dbox{width:min(92%,340px);padding:18px 14px;border-radius:16px;border:2px solid #d9b45a;background:radial-gradient(circle at 50% 30%,#2a7a4e,#124d2d);box-shadow:0 10px 30px #000a,inset 0 0 30px #0006;text-align:center}
+#dbox h2{margin:0 0 4px;font-size:24px;letter-spacing:6px;color:#f2d98a}
+#dbox p{margin:0;font-size:13px;opacity:.85}
+#dice{display:flex;justify-content:center;gap:14px;margin:16px 0 8px;min-height:72px;align-items:center}
+.die{width:60px;height:60px;border-radius:12px;background:linear-gradient(145deg,#fff,#ddd6c0);box-shadow:0 5px 0 #aaa28a,0 9px 12px #0006;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;place-items:center}
+.die i{width:11px;height:11px;border-radius:50%}.die i.on{background:#222;box-shadow:inset 0 -2px 2px #0006}.die.r i.on{background:#c62828}
+.die.rolling{animation:tum .35s linear infinite}.die.land{animation:lnd .45s ease-out}
+@keyframes tum{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-22px) rotate(180deg)}100%{transform:translateY(0) rotate(360deg)}}
+@keyframes lnd{0%{transform:translateY(-26px) rotate(-25deg)}60%{transform:translateY(4px) rotate(6deg)}100%{transform:none}}
+#seats{display:grid;grid-template-columns:repeat(3,1fr);grid-template-areas:'. a .' 'b c d' '. e .';gap:6px;width:250px;margin:12px auto}
+.seat{padding:7px 4px;border-radius:10px;background:#0007;font-size:14px;transition:.12s}
+.seat.hot{background:#f2c14e;color:#222;transform:scale(1.12)}.seat.dealer{background:#e0a21a;color:#222;box-shadow:0 0 16px #ffd76a;transform:scale(1.15);font-weight:700}
+#sc{grid-area:c;align-self:center;font-size:28px;font-weight:700;color:#f2d98a}
+#dres{min-height:1.5em;margin:8px 0}
 .av{display:inline-block;width:30px;height:30px;border-radius:50%;object-fit:cover;background:#0b2f1c;text-align:center;line-height:30px;font-size:18px;vertical-align:middle;margin-right:4px}
 button{font:inherit;padding:8px 14px;margin:4px 4px 0 0;border:0;border-radius:8px;background:#f2c14e;color:#222;cursor:pointer}
 #msg{min-height:1.5em;font-size:15px}
@@ -221,7 +235,7 @@ function pick(i){if(pend=="discard"&&!over)discard(0,i)}
 const EM=["🧑","👧","👩","👦"],AVok=[0,0,0,0];
 [0,1,2,3].forEach(p=>{const i=new Image();i.onload=()=>{AVok[p]=1;if(H)render()};i.src=`img/p${p}.jpg`});
 const av=p=>AVok[p]?`<img class="av" src="img/p${p}.jpg" alt="">`:`<span class="av">${EM[p]}</span>`;
-function rollDice(){
+function rollDiceOld(){
   const o=document.createElement("div");o.id="shuf";
   o.innerHTML=`<div>擲骰子決定誰做莊</div><div id="dv" style="font-size:56px;letter-spacing:6px">⚀⚀⚀</div><div id="dres"></div><button id="db">擲骰子</button>`;
   $("t").appendChild(o);
@@ -237,6 +251,34 @@ function rollDice(){
       $("db").textContent="開始洗牌";$("db").style.display="";
       $("db").onclick=()=>{o.remove();start()};
     },1200);
+  };
+}
+const PIP=[0,[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]];
+const face=(el,v)=>{el.innerHTML=[0,1,2,3,4,5,6,7,8].map(i=>`<i class='${PIP[v].includes(i)?'on':''}'></i>`).join('');el.classList.toggle('r',v==1||v==4)};
+function rollDice(){
+  const o=document.createElement('div');o.id='shuf';
+  o.innerHTML=`<div id='dbox'><h2>擲骰定莊</h2><p>三顆骰子，從你開始逆時針數</p><div id='dice'><div class='die'></div><div class='die'></div><div class='die'></div></div><div id='seats'><div class='seat' id='s2' style='grid-area:a'>對家</div><div class='seat' id='s3' style='grid-area:b'>上家</div><div id='sc'>?</div><div class='seat' id='s1' style='grid-area:d'>下家</div><div class='seat' id='s0' style='grid-area:e'>你</div></div><div id='dres'>　</div><button id='db'>擲骰子</button></div>`;
+  $('t').appendChild(o);
+  const ds=[...document.querySelectorAll('.die')],rnd=()=>1+Math.random()*6|0;
+  ds.forEach(d=>face(d,1));
+  $('db').onclick=()=>{
+    $('db').style.display='none';$('dres').textContent='';
+    ds.forEach(d=>d.classList.add('rolling'));
+    const iv=setInterval(()=>ds.forEach(d=>face(d,rnd())),90);
+    setTimeout(()=>{
+      clearInterval(iv);
+      const v=ds.map(rnd),n=v[0]+v[1]+v[2];
+      ds.forEach((d,i)=>{face(d,v[i]);d.classList.remove('rolling');d.classList.add('land')});
+      $('sc').textContent=n;dealer=d0=(n-1)%4;
+      let k=0;
+      const cv=setInterval(()=>{
+        document.querySelectorAll('.seat').forEach(s=>s.classList.remove('hot'));
+        if(k>=n){clearInterval(cv);$('s'+dealer).classList.add('dealer');
+          $('dres').textContent=`點數 ${n}，由「${NMS[dealer]}」當莊`;
+          $('db').textContent='開始洗牌';$('db').style.display='';$('db').onclick=()=>{o.remove();start()};return}
+        $('s'+(k%4)).classList.add('hot');k++;
+      },Math.min(280,2600/n|0));
+    },1300);
   };
 }
 rollDice();
