@@ -62,7 +62,7 @@ button{font:inherit;padding:8px 14px;margin:4px 4px 0 0;border:0;border-radius:8
 <div class="pl" id="me"></div><div id="res"></div>
 </div>
 <script>
-const NMS=["你","下家","對家","上家"],WD="東南西北",FL="春夏秋冬梅蘭竹菊",BASE=30,UNIT=10;
+const NMS=["劉知珉(你)","內永枝利","金旼炡","寧藝卓"],WD="東南西北",FL="春夏秋冬梅蘭竹菊",BASE=30,UNIT=10;
 let W,H,M,F,D,turn,pend,canW,last,over,opts,aw,dealer=0,d0=0,streak=0,quan=0,S=[1000,1000,1000,1000],ks=0,dr=0,dealing=0;
 const $=id=>document.getElementById(id);
 const NM2=t=>t<27?"一二三四五六七八九"[t%9]+"萬筒條"[t/9|0]:"東南西北中發白"[t-27];
@@ -250,7 +250,7 @@ function render(){
   $("p1").innerHTML=side(1);$("p2").innerHTML=side(2);$("p3").innerHTML=side(3);
   $("c").innerHTML=`<div id="d2">${dc(2)}</div><div id="d3">${dc(3)}</div><div id="mid"><div class="big">${WD[quan]}風圈</div><div class="mid2">莊：${NMS[dealer]}${streak?" 連"+streak:""}</div><div class="wall">${wall()}</div></div><div id="d1">${dc(1)}</div><div id="d0">${dc(0)}</div>`;
   const h=H[0];$("me").className="pl"+(dealing?" dl":"");
-  $("me").innerHTML=`${av(0)}<b>你</b> ${WD[(0-dealer+4)%4]}${dealer==0?"莊":""}${turn==0&&!over?" ▶":""} ${S[0]}分　${mt(0)} ${fl(0)}<br>`+
+  $("me").innerHTML=`${av(0)}<b>${NMS[0]}</b> ${WD[(0-dealer+4)%4]}${dealer==0?"莊":""}${turn==0&&!over?" ▶":""} ${S[0]}分　${mt(0)} ${fl(0)}<br>`+
     h.map((t,i)=>(dr&&turn==0&&pend=="discard"&&i==h.length-1?`<span class="gap"></span>`:"")+tile(t,"",`onclick="pick(${i})" style="animation-delay:${dealing?i*35:0}ms"`)).join("");
   if(over||turn<0)return;
   let a="",m="對手思考中…";
@@ -291,7 +291,7 @@ const PIP=[0,[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]];
 const face=(el,v)=>{el.innerHTML=[0,1,2,3,4,5,6,7,8].map(i=>`<i class='${PIP[v].includes(i)?'on':''}'></i>`).join('');el.classList.toggle('r',v==1||v==4)};
 function rollDice(){
   const o=document.createElement('div');o.id='shuf';
-  o.innerHTML=`<div id='dbox'><h2>擲骰定莊</h2><p>三顆骰子，從你開始逆時針數</p><div id='dice'><div class='die'></div><div class='die'></div><div class='die'></div></div><div id='seats'><div class='seat' id='s2' style='grid-area:a'>對家</div><div class='seat' id='s3' style='grid-area:b'>上家</div><div id='sc'>?</div><div class='seat' id='s1' style='grid-area:d'>下家</div><div class='seat' id='s0' style='grid-area:e'>你</div></div><div id='dres'>　</div><button id='db'>擲骰子</button></div>`;
+  o.innerHTML=`<div id='dbox'><h2>擲骰定莊</h2><p>三顆骰子，從你開始逆時針數</p><div id='dice'><div class='die'></div><div class='die'></div><div class='die'></div></div><div id='seats'><div class='seat' id='s2' style='grid-area:a'>${NMS[2]}</div><div class='seat' id='s3' style='grid-area:b'>${NMS[3]}</div><div id='sc'>?</div><div class='seat' id='s1' style='grid-area:d'>${NMS[1]}</div><div class='seat' id='s0' style='grid-area:e'>${NMS[0]}</div></div><div id='dres'>　</div><button id='db'>擲骰子</button></div>`;
   $('t').appendChild(o);
   const ds=[...document.querySelectorAll('.die')],rnd=()=>1+Math.random()*6|0;
   ds.forEach(d=>face(d,1));
